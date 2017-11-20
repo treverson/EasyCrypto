@@ -1,24 +1,22 @@
+import inspect
+import json
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.exc import ArgumentError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
-import models
-from models import Base
-
-import os
-import logging
-import inspect
-import json
+from module_db import DBmodels
+from module_db.DBmodels import Base
+from utilities import logger
 
 """
 TODO: 
 - logger as decorator
 """
 
-class Control:
-    __engine = None
-    __logger = None
-    __Session = None
+
+class DBControl:
 
     def __init__(self):
 
@@ -26,25 +24,9 @@ class Control:
         self.__secure_create_engine()
         self.__configure_sessionmaker()
 
-    def __assure_log_dir_exists(self, path):
-
-        if(not os.path.exists(path + "/../logs/")):
-            os.makedirs(path + "/../logs/")
-
     def __create_logger(self):
 
-        logger = logging.getLogger("module_db")
-        path = os.path.dirname(os.path.abspath(__file__))
-        self.__assure_log_dir_exists(path)
-        hdlr = logging.FileHandler(path + "/../logs/module_db.log")
-
-        formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-        hdlr.setFormatter(formatter)
-
-        logger.addHandler(hdlr)
-        logger.setLevel(logging.INFO)
-
-        self.__logger = logger
+        self.__logger = logger.create_logger("module_db")
 
     # <editor-fold desc="Connection setup code">
     def __secure_create_engine(self):
@@ -105,7 +87,9 @@ class Control:
     def __load_password(self):
 
         self.__logger.info("Loading database password")
-        with open("pass.txt", "r") as f:
+
+        path = os.path.dirname(os.path.abspath(__file__))
+        with open("{}/pass.txt".format(path), "r") as f:
             password = f.read()
 
         self.__logger.info("Loading database password successful")
@@ -113,14 +97,14 @@ class Control:
     # </editor-fold>
 
     def is_correct_class(self, object_to_map):
-        """ Checks if object is an instance of one of the classes in the models.py
+        """ Checks if object is an instance of one of the classes in the DBmodels.py
         """
 
-        names = inspect.getmembers(models, inspect.isclass)
-        models_classes = tuple(x[1] for x in names)
+        names = inspect.getmembers(DBmodels, inspect.isclass)
+        DBmodels_classes = tuple(x[1] for x in names)
 
-        for models_class in models_classes:
-            if isinstance(object_to_map, models_class):
+        for DBmodels_class in DBmodels_classes:
+            if isinstance(object_to_map, DBmodels_class):
                 return True
         return False
 
@@ -137,28 +121,46 @@ class Control:
             self.__clear_all_tables()
 
         self.__logger.info("Loading basic database structure")
-        with open("db.txt", "r") as f:
-            data = json.load(f)
-
-        website = models.Website()
-        models.load_args(website, data["Website"])
-        self.map_object(website)
-
-        action = models.Action()
-        models.load_args(action, data["Action"])
-        action.website_id = website.website_id
-        self.map_object(action)
-
-        parameter = models.Parameter()
-        models.load_args(parameter, data["Parameter"])
-        self.map_object(parameter)
-
-        specification = models.Specification()
-        specification.action_id = action.action_id
-        specification.parameter_id = parameter.parameter_id
-        self.map_object(specification)
+        path = os.path.dirname(os.path.abspath(__file__))
+        files = os.listdir(path+"/data")
+        for file in files:
+            self.__load_object_from_json("{}/data/{}".format(path, file))
 
         self.__logger.info("Loading basic database structure successful")
+
+    def __load_object_from_json(self, file_name):
+
+        with open(file_name, "r") as f:
+            data = json.load(f)
+
+        website = DBmodels.Website()
+        DBmodels.load_args(website, data["Website"])
+        self.map_object(website)
+
+        for action_data in data["Action"]:
+            action = DBmodels.Action()
+            DBmodels.load_args(action, action_data)
+            action.website_id = website.website_id
+            self.map_object(action)
+
+        if "Parameter" not in data:
+            return
+        
+        parameter = DBmodels.Parameter()
+        DBmodels.load_args(parameter, data["Parameter"])
+        self.map_object(parameter)
+
+        specification = DBmodels.Specification()
+
+        action_address = data["Specification"]["action_address"]
+        action_id = self.get_objects_of_class(DBmodels.Action, {"address": action_address})[0].action_id
+
+        parameter_name = data["Specification"]["parameter_name"]
+        parameter_id = self.get_objects_of_class(DBmodels.Parameter, {"name": parameter_name})[0].parameter_id
+
+        specification.action_id = action_id
+        specification.parameter_id = parameter_id
+        self.map_object(specification)
 
     def __clear_all_tables(self):
 
@@ -170,7 +172,7 @@ class Control:
     def map_object(self, object_to_map):
         """ Maps received object to the database
 
-        Object must be an instance of one of the classes in models.py
+        Object must be an instance of one of the classes in DBmodels.py
         """
 
         if not self.is_correct_class(object_to_map):
