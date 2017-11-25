@@ -1,8 +1,14 @@
 from PyQt5.QtCore import QObject, pyqtSlot
 
 
-class WebsiteSlot(QObject):
+class IndexChangedSlot(QObject):
+
+    def __init__(self, callback, parent=None):
+        super(IndexChangedSlot, self).__init__()
+        self.index = 0
+        self.callback = callback
 
     @pyqtSlot(int)
-    def fun(self,index):
-        print(index)
+    def notifyIndexChanged(self,index):
+        self.index = index
+        self.callback()

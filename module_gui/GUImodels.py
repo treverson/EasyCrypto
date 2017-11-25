@@ -1,17 +1,78 @@
 from PyQt5.QtCore import QAbstractListModel, Qt
 
 
-class WebsiteModel(QAbstractListModel):
+class ModelFactory:
+
+    def __init__(self):
+
+        self.__models = {}
+        self.__role_count = Qt.UserRole + 1
+
+    def create_model(self, model_name, data, data_count_repr):
+
+        model = DataModel(data, data_count_repr)
+
+        self.__set_roles(model, data)
+
+        self.__models[model_name] = model
+        return model
+
+    def __set_roles(self, model, data):
+
+        for role_name in data:
+
+            formatted_role_name = "{}_role".format(role_name)
+            model.set_role_name(formatted_role_name, self.__role_count)
+            self.__role_count += 1
+
+            model.insert_to_roles(formatted_role_name, role_name)
+
+class DataModel(QAbstractListModel):
     """ Model used by Qt to display list of websites
 
     """
-    NameRole = Qt.UserRole + 1
 
-    __roles = {NameRole: b"name"}
+    def __init__(self, data, data_count_repr):
+        super(DataModel, self).__init__()
 
-    def __init__(self, names):
-        super(WebsiteModel, self).__init__()
+        self.__roles = {}
+        self.__roles_data = data
+        self.__roles_count_repr = data_count_repr
+
+    def set_role_name(self, formatted_role_name, role_index):
+        self.__setattr__(formatted_role_name, role_index)
+
+    def insert_to_roles(self, formatted_role_name, name):
+        self.__roles[self.__getattribute__(formatted_role_name)] = "{}".format(name).encode(encoding='UTF-8')
+
+    def rowCount(self, parent=None, *args, **kwargs):
+        row_count = (len(self.__roles_data[self.__roles_count_repr]))
+        return row_count
+
+    def data(self, QModelIndex, role_int=None):
+        row = QModelIndex.row()
+
+        role_string = self.__roles[role_int].decode(encoding='UTF-8')
+        if role_string in self.__roles_data:
+            return self.__roles_data[role_string][row]
+
+    def roleNames(self):
+        return self.__roles
+
+
+class ParameterModel(QAbstractListModel):
+    """ Model used by Qt to display list of paramaters
+
+    """
+    NameRole = Qt.UserRole + 3
+    TypeRole = Qt.UserRole + 4
+
+    __roles = {NameRole: b"name", TypeRole: b"type"}
+
+    def __init__(self, names, types):
+        super(ParameterModel, self).__init__()
         self.__names = names
+        self.__types = types
 
     def rowCount(self, parent=None, *args, **kwargs):
         return len(self.__names)
@@ -20,30 +81,8 @@ class WebsiteModel(QAbstractListModel):
         row = QModelIndex.row()
         if role == self.NameRole:
             return self.__names[row]
-
-    def roleNames(self):
-        return self.__roles
-
-
-class ActionModel(QAbstractListModel):
-    """ Model used by Qt to display list of actions
-
-    """
-    AddressRole = Qt.UserRole + 1
-
-    __roles = {AddressRole: b"address"}
-
-    def __init__(self, addresses):
-        super(ActionModel, self).__init__()
-        self.__addresses = addresses
-
-    def rowCount(self, parent=None, *args, **kwargs):
-        return len(self.__addresses)
-
-    def data(self, QModelIndex, role=None):
-        row = QModelIndex.row()
-        if role == self.AddressRole:
-            return self.__addresses[row]
+        elif role == self.TypeRole:
+            return self.__types[row]
 
     def roleNames(self):
         return self.__roles

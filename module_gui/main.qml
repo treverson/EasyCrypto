@@ -34,7 +34,7 @@ Window {
                     height: 20
 
                     Row {
-                        id: row1
+                        id: websiteRow
                         spacing: 10
                         anchors.fill: parent
 
@@ -55,7 +55,7 @@ Window {
                 }
             }
             onCurrentIndexChanged: {
-                websiteSlot.fun(currentIndex)
+                websiteSlot.notifyIndexChanged(currentIndex)
             }
 
         }
@@ -73,6 +73,11 @@ Window {
             objectName: "actionListView"
             anchors.fill: parent
             model: actionModel
+            orientation: ListView.Vertical
+            flickableDirection: Flickable.VerticalFlick
+            focus: true
+            highlight: Rectangle { color: "lightsteelblue";}
+            highlightFollowsCurrentItem: true
 
             delegate: Component {
                 Item {
@@ -81,12 +86,12 @@ Window {
                     height: 20
 
                     Row {
-                        id: row1
+                        id: actionRow
                         spacing: 10
                         anchors.fill: parent
 
                         Text {
-                            text: addresses
+                            text: address
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -100,6 +105,9 @@ Window {
                         }
                     }
                 }
+            }
+            onCurrentIndexChanged: {
+                actionSlot.notifyIndexChanged(currentIndex)
             }
         }
     }
@@ -128,7 +136,47 @@ Window {
             id: rectangle1
             color: "#dad7d7"
             anchors.fill: parent
-            z: -1
+            anchors.topMargin: 30
+
+            ListView {
+                id: parameterListView
+                objectName: "parameterListView"
+                anchors.fill: parent
+                model: parameterModel
+                orientation: ListView.Vertical
+                flickableDirection: Flickable.VerticalFlick
+                focus: true
+                highlight: Rectangle { color: "lightsteelblue";}
+                highlightFollowsCurrentItem: true
+
+                delegate: Component {
+                    Item {
+                        property variant itemData: model.modelData
+                        width: parent.width
+                        height: 20
+
+                        Row {
+                            id: parameterRow
+                            spacing: 10
+                            anchors.fill: parent
+
+                            Text {
+                                text: name
+                                font.bold: true
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            MouseArea {
+                                id: parameterMouseArea
+                                anchors.fill: parent
+                                onClicked: {
+                                    parameterListView.currentIndex = index
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

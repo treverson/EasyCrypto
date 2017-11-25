@@ -188,7 +188,10 @@ class DBControl:
     def __get_filtered_results(self, results, class_to_get, attribs):
 
         for attr, value in attribs.items():
-            results = results.filter(getattr(class_to_get, attr) == value)
+            if isinstance(value, list):
+                results = results.filter(getattr(class_to_get, attr).in_(value))
+            else:
+                results = results.filter(getattr(class_to_get, attr) == value)
         results = results.all()
         return results
 
