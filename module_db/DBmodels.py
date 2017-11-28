@@ -5,10 +5,13 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-def load_args(object, args):
+def load_args(object_to_load, args):
+    """ Loads model object with given data
 
-
-    object.__dict__.update(args)
+    :param object_to_load: object to load with arguments
+    :param args: data to load
+    """
+    object_to_load.__dict__.update(args)
 
 class Website(Base):
     __tablename__ = 'website'

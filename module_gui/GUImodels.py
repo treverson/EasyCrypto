@@ -27,6 +27,7 @@ class ModelFactory:
 
             model.insert_to_roles(formatted_role_name, role_name)
 
+
 class DataModel(QAbstractListModel):
     """ Model used by Qt to display list of websites
 
@@ -55,34 +56,6 @@ class DataModel(QAbstractListModel):
         role_string = self.__roles[role_int].decode(encoding='UTF-8')
         if role_string in self.__roles_data:
             return self.__roles_data[role_string][row]
-
-    def roleNames(self):
-        return self.__roles
-
-
-class ParameterModel(QAbstractListModel):
-    """ Model used by Qt to display list of paramaters
-
-    """
-    NameRole = Qt.UserRole + 3
-    TypeRole = Qt.UserRole + 4
-
-    __roles = {NameRole: b"name", TypeRole: b"type"}
-
-    def __init__(self, names, types):
-        super(ParameterModel, self).__init__()
-        self.__names = names
-        self.__types = types
-
-    def rowCount(self, parent=None, *args, **kwargs):
-        return len(self.__names)
-
-    def data(self, QModelIndex, role=None):
-        row = QModelIndex.row()
-        if role == self.NameRole:
-            return self.__names[row]
-        elif role == self.TypeRole:
-            return self.__types[row]
 
     def roleNames(self):
         return self.__roles

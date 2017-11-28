@@ -1,0 +1,13 @@
+- logger as a decorator
+- proper logging
+
+- proper comments
+
+- tests for SQLAlchemy if necessary
+- tests for Qt behaviour
+
+- handle password for DB
+
+- parameters input
+
+- role_count overflow in GUI

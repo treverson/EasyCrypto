@@ -16,18 +16,30 @@ class GUIControl:
 
         self.__models = {}
         self.__model_factory = ModelFactory()
-
         self.__create_logger()
+
+    def setup(self):
+
         self.__create_db_control()
-        self.__setup()
+        self.__create_app()
+
+    def show(self):
+
+        sys.exit(self.__app.exec_())
 
     def notify_website_clicked(self):
 
-        self.__refresh_event_action()
+        try:
+            self.__refresh_event_action()
+        except AttributeError:
+            self.__logger.error("The GUI module has not been properly initialised")
 
     def notify_action_clicked(self):
 
-        self.__refresh_event_parameter()
+        try:
+            self.__refresh_event_parameter()
+        except:
+            self.__logger.error("The GUI module has not been properly initialised")
 
     def __create_logger(self):
 
@@ -37,9 +49,9 @@ class GUIControl:
 
         self.__db_control = DBcontrol.DBControl()
 
-    def __setup(self):
+    def __create_app(self):
 
-        self.app = QGuiApplication(sys.argv)
+        self.__app = QGuiApplication(sys.argv)
 
         self.__engine = QQmlApplicationEngine()
 
@@ -48,8 +60,6 @@ class GUIControl:
 
         self.__update_buttons_state({"executeButton": 0, "refreshButton": 1, "quitButton": 1})
         self.__attach_events()
-
-        sys.exit(self.app.exec_())
 
     def __attach_slots(self):
         root_context = self.__engine.rootContext()

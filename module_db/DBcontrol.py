@@ -10,12 +10,6 @@ from module_db import DBmodels
 from module_db.DBmodels import Base
 from utilities import logger
 
-"""
-TODO: 
-- logger as decorator
-"""
-
-
 class DBControl:
 
     def __init__(self):
@@ -23,6 +17,88 @@ class DBControl:
         self.__create_logger()
         self.__secure_create_engine()
         self.__configure_sessionmaker()
+
+    def is_correct_class(self, object_to_map):
+        """ Checks if object is an instance of one of the classes in the DBmodels.py
+        """
+
+        names = inspect.getmembers(DBmodels, inspect.isclass)
+        DBmodels_classes = tuple(x[1] for x in names)
+
+        for DBmodels_class in DBmodels_classes:
+            if isinstance(object_to_map, DBmodels_class):
+                return True
+        return False
+
+    def load_basic_db_structure(self, clean=False):
+        """ Creates the most basic structure of database
+
+        The structure is loaded from db.txt, which holds a JSON
+
+        Parameter clean allows to remove all records from the base
+        if a fresh start is needed
+        """
+
+        if clean:
+            self.__clear_all_tables()
+
+        self.__logger.info("Loading basic database structure")
+        path = os.path.dirname(os.path.abspath(__file__))
+        files = os.listdir(path+"/data")
+        for file in files:
+            self.__load_object_from_json("{}/data/{}".format(path, file))
+
+        self.__logger.info("Loading basic database structure successful")
+
+    def map_object(self, object_to_map):
+        """ Maps received object to the database
+
+        Object must be an instance of one of the classes in DBmodels.py
+        """
+
+        if not self.is_correct_class(object_to_map):
+            self.__logger.error("Object to be mapped is of wrong type")
+
+        session = self.__Session()
+        session.add(object_to_map)
+        session.commit()
+        session.query(object_to_map.__class__).all()
+
+        session.close()
+
+    def get_objects_of_class(self, class_to_get, attribs={}):
+        """ Selects objects from database
+
+        class_to_get - specifies the table
+        attribs - results of query are filtered by this dict
+        """
+
+        session = self.__Session()
+        results = session.query(class_to_get)
+
+        results = self.__get_filtered_results(results, class_to_get, attribs)
+
+        session.close()
+
+        return results
+
+    def remove_object(self, class_to_remove, attribs):
+        """ Removes specific object from database
+
+        class_to_remove - specifies the table
+        attribs - records holding attributes given in attribs will be removed
+        """
+
+        session = self.__Session()
+
+        results = session.query(class_to_remove)
+        results = self.__get_filtered_results(results, class_to_remove, attribs)
+
+        for result in results:
+            session.delete(result)
+
+        session.commit()
+        session.close()
 
     def __create_logger(self):
 
@@ -32,9 +108,11 @@ class DBControl:
     def __secure_create_engine(self):
 
         try:
+
             self.__try_connection()
 
         except (ArgumentError, OperationalError):
+
             self.__logger.error("Could not connect to the database")
 
             self.__create_db()
@@ -96,38 +174,6 @@ class DBControl:
         return password
     # </editor-fold>
 
-    def is_correct_class(self, object_to_map):
-        """ Checks if object is an instance of one of the classes in the DBmodels.py
-        """
-
-        names = inspect.getmembers(DBmodels, inspect.isclass)
-        DBmodels_classes = tuple(x[1] for x in names)
-
-        for DBmodels_class in DBmodels_classes:
-            if isinstance(object_to_map, DBmodels_class):
-                return True
-        return False
-
-    def load_basic_db_structure(self, clean=False):
-        """ Creates the most basic structure of database
-
-        The structure is loaded from db.txt, which holds a JSON
-
-        Parameter clean allows to remove all records from the base
-        if a fresh start is needed
-        """
-
-        if clean:
-            self.__clear_all_tables()
-
-        self.__logger.info("Loading basic database structure")
-        path = os.path.dirname(os.path.abspath(__file__))
-        files = os.listdir(path+"/data")
-        for file in files:
-            self.__load_object_from_json("{}/data/{}".format(path, file))
-
-        self.__logger.info("Loading basic database structure successful")
-
     def __load_object_from_json(self, file_name):
 
         with open(file_name, "r") as f:
@@ -169,22 +215,6 @@ class DBControl:
         Base.metadata.create_all(bind=self.__engine)
         self.__logger.info("Clearing all database tables successful")
 
-    def map_object(self, object_to_map):
-        """ Maps received object to the database
-
-        Object must be an instance of one of the classes in DBmodels.py
-        """
-
-        if not self.is_correct_class(object_to_map):
-            self.__logger.error("Object to be mapped is of wrong type")
-
-        session = self.__Session()
-        session.add(object_to_map)
-        session.commit()
-        session.query(object_to_map.__class__).all()
-
-        session.close()
-
     def __get_filtered_results(self, results, class_to_get, attribs):
 
         for attr, value in attribs.items():
@@ -194,38 +224,3 @@ class DBControl:
                 results = results.filter(getattr(class_to_get, attr) == value)
         results = results.all()
         return results
-
-    def get_objects_of_class(self, class_to_get, attribs={}):
-        """ Selects objects from database
-
-        class_to_get - specifies the table
-        attribs - results of query are filtered by this dict
-        """
-
-        session = self.__Session()
-        results = session.query(class_to_get)
-
-        results = self.__get_filtered_results(results, class_to_get, attribs)
-
-        session.close()
-
-        return results
-
-    def remove_object(self, class_to_remove, attribs):
-        """ Removes specific object from database
-
-        class_to_remove - specifies the table
-        attribs - records holding attributes given in attribs will be removed
-        """
-
-        session = self.__Session()
-
-        results = session.query(class_to_remove)
-        results = self.__get_filtered_results(results, class_to_remove, attribs)
-
-        for result in results:
-            session.delete(result)
-
-        session.commit()
-        session.close()
-
