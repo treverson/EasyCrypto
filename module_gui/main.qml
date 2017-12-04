@@ -167,12 +167,27 @@ Window {
                             }
 
                             MouseArea {
-                                id: parameterMouseArea
+                                id: actionMouseArea
                                 anchors.fill: parent
                                 onClicked: {
                                     parameterListView.currentIndex = index
                                 }
                             }
+
+                            TextInput {
+                                id: input
+                                color: "#151515"; selectionColor: "green"
+                                font.pixelSize: 16; font.bold: true
+                                maximumLength: 16
+                                anchors.centerIn: parent
+                                text: "text"
+                                focus: true
+
+                                onTextChanged: {
+                                    parameterSlot.notifyInputChanged(parameterListView.currentIndex, text)
+                                }
+                            }
+
                         }
                     }
                 }

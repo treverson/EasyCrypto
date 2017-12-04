@@ -6,8 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import ArgumentError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
-from module_db import DBmodels
-from module_db.DBmodels import Base
+from module_db import db_models
+from module_db.db_models import Base
 from utilities import logger
 
 class DBControl:
@@ -19,14 +19,14 @@ class DBControl:
         self.__configure_sessionmaker()
 
     def is_correct_class(self, object_to_map):
-        """ Checks if object is an instance of one of the classes in the DBmodels.py
+        """ Checks if object is an instance of one of the classes in the db_models.py
         """
 
-        names = inspect.getmembers(DBmodels, inspect.isclass)
-        DBmodels_classes = tuple(x[1] for x in names)
+        names = inspect.getmembers(db_models, inspect.isclass)
+        db_models_classes = tuple(x[1] for x in names)
 
-        for DBmodels_class in DBmodels_classes:
-            if isinstance(object_to_map, DBmodels_class):
+        for db_models_class in db_models_classes:
+            if isinstance(object_to_map, db_models_class):
                 return True
         return False
 
@@ -53,7 +53,7 @@ class DBControl:
     def map_object(self, object_to_map):
         """ Maps received object to the database
 
-        Object must be an instance of one of the classes in DBmodels.py
+        Object must be an instance of one of the classes in db_models.py
         """
 
         if not self.is_correct_class(object_to_map):
@@ -179,30 +179,30 @@ class DBControl:
         with open(file_name, "r") as f:
             data = json.load(f)
 
-        website = DBmodels.Website()
-        DBmodels.load_args(website, data["Website"])
+        website = db_models.Website()
+        db_models.load_args(website, data["Website"])
         self.map_object(website)
 
         for action_data in data["Action"]:
-            action = DBmodels.Action()
-            DBmodels.load_args(action, action_data)
+            action = db_models.Action()
+            db_models.load_args(action, action_data)
             action.website_id = website.website_id
             self.map_object(action)
 
         if "Parameter" not in data:
             return
         
-        parameter = DBmodels.Parameter()
-        DBmodels.load_args(parameter, data["Parameter"])
+        parameter = db_models.Parameter()
+        db_models.load_args(parameter, data["Parameter"])
         self.map_object(parameter)
 
-        specification = DBmodels.Specification()
+        specification = db_models.Specification()
 
         action_address = data["Specification"]["action_address"]
-        action_id = self.get_objects_of_class(DBmodels.Action, {"address": action_address})[0].action_id
+        action_id = self.get_objects_of_class(db_models.Action, {"address": action_address})[0].action_id
 
         parameter_name = data["Specification"]["parameter_name"]
-        parameter_id = self.get_objects_of_class(DBmodels.Parameter, {"name": parameter_name})[0].parameter_id
+        parameter_id = self.get_objects_of_class(db_models.Parameter, {"name": parameter_name})[0].parameter_id
 
         specification.action_id = action_id
         specification.parameter_id = parameter_id

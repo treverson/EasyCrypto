@@ -12,3 +12,14 @@ class IndexChangedSlot(QObject):
     def notifyIndexChanged(self,index):
         self.index = index
         self.callback()
+
+
+class InputChangedSlot(QObject):
+
+    def __init__(self, callback, parent=None):
+        super(InputChangedSlot, self).__init__()
+        self.callback = callback
+
+    @pyqtSlot(int, str)
+    def notifyInputChanged(self, index, msg):
+        self.callback(index, msg)

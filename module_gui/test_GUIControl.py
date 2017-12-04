@@ -3,8 +3,8 @@ from unittest.mock import Mock
 
 from PyQt5.QtGui import QGuiApplication
 
-from module_db import DBcontrol
-from GUIcontrol import GUIControl
+from module_db import db_control
+from gui_control import GUIControl
 
 
 class TestGUIControl(TestCase):

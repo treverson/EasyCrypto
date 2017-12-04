@@ -4,9 +4,10 @@ from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, QUrl
 
-from GUImodels import ModelFactory
-from GUIqmlControl import IndexChangedSlot
-from module_db import DBcontrol, DBmodels
+from gui_models import ModelFactory
+from gui_qml_control import IndexChangedSlot, InputChangedSlot
+from module_macro import macro_control
+from module_db import db_control, db_models
 from utilities import logger, one_time
 
 
@@ -21,7 +22,9 @@ class GUIControl:
     def setup(self):
 
         self.__create_db_control()
+        self.__create_macro_control()
         self.__create_app()
+        self.__refresh_event_website()
 
     def show(self):
 
@@ -41,13 +44,21 @@ class GUIControl:
         except:
             self.__logger.error("The GUI module has not been properly initialised")
 
+    def notify_parameter_changed(self, index, msg):
+
+        self.__update_filled_parameters(index, msg)
+
     def __create_logger(self):
 
         self.__logger = logger.create_logger("module_gui")
 
     def __create_db_control(self):
 
-        self.__db_control = DBcontrol.DBControl()
+        self.__db_control = db_control.DBControl()
+
+    def __create_macro_control(self):
+
+        self.__macro_control = macro_control.MacroControl()
 
     def __create_app(self):
 
@@ -58,17 +69,19 @@ class GUIControl:
         self.__attach_slots()
         self.__engine.load(QUrl.fromLocalFile("main.qml"))
 
-        self.__update_buttons_state({"executeButton": 0, "refreshButton": 1, "quitButton": 1})
         self.__attach_events()
 
     def __attach_slots(self):
         root_context = self.__engine.rootContext()
 
-        self.website_slot = IndexChangedSlot(callback=self.notify_website_clicked)
-        root_context.setContextProperty("websiteSlot", self.website_slot)
+        self.__website_slot = IndexChangedSlot(callback=self.notify_website_clicked)
+        root_context.setContextProperty("websiteSlot", self.__website_slot)
 
-        self.action_slot = IndexChangedSlot(callback=self.notify_action_clicked)
-        root_context.setContextProperty("actionSlot", self.action_slot)
+        self.__action_slot = IndexChangedSlot(callback=self.notify_action_clicked)
+        root_context.setContextProperty("actionSlot", self.__action_slot)
+
+        self.__parameter_slot = InputChangedSlot(callback=self.notify_parameter_changed)
+        root_context.setContextProperty("parameterSlot", self.__parameter_slot)
 
     def __update_buttons_state(self, states):
 
@@ -88,7 +101,7 @@ class GUIControl:
 
         self.__logger.info("Attaching slots to signals")
         button = self.__engine.rootObjects()[0].findChild(QObject, "refreshMouseArea")
-        button.refreshEvent.connect(self.__refresh_event_website)
+        button.refreshEvent.connect(self.__refresh_event_logs)
 
         button = self.__engine.rootObjects()[0].findChild(QObject, "executeMouseArea")
         button.executeEvent.connect(self.__execute_event)
@@ -109,23 +122,56 @@ class GUIControl:
 
         self.__load_website()
         self.__add_models_to_context()
+        self.__update_buttons_state({"executeButton": 0, "refreshButton": 1, "quitButton": 1})
 
     def __refresh_event_action(self):
 
         self.__load_action()
         self.__add_models_to_context()
+        self.__update_buttons_state({"executeButton": 1, "refreshButton": 1, "quitButton": 1})
 
     def __refresh_event_parameter(self):
 
         self.__load_parameters()
         self.__add_models_to_context()
 
+    def __refresh_event_logs(self):
+
+        print("Odświeżam logi")
+
     def __execute_event(self):
-        print("działa - execute")
+
+        selected_data = self.__gather_selected_data()
+        command = self.__create_command(selected_data)
+        self.__macro_control.use_command(command)
+
+    def __gather_selected_data(self):
+
+        selected_data = {}
+
+        selected_data["current_website"] = self.__website_data[self.__website_slot.index]
+        selected_data["current_action"] = self.__action_data[self.__action_slot.index]
+
+        names_list = [parameter.name for parameter in self.__parameter_data]
+        input_list = [msg for index, msg in self.__filled_parameter.items()]
+        selected_data["filled_parameters"] = zip(names_list, input_list)
+
+        return selected_data
+
+    def __create_command(self, selected_data):
+
+        command = {}
+
+        command["protocol"] = selected_data["current_website"].protocol
+        command["address"] = selected_data["current_website"].address
+        command["action"] = selected_data["current_action"].address
+        command["parameters"] = list(selected_data["filled_parameters"])
+
+        return command
 
     def __load_website(self):
 
-        self.__website_data = self.__db_control.get_objects_of_class(DBmodels.Website)
+        self.__website_data = self.__db_control.get_objects_of_class(db_models.Website)
         website_names = [website.name for website in self.__website_data]
 
         website_model = self.__model_factory.create_model("WebsiteModel", {"name": website_names}, "name")
@@ -133,10 +179,10 @@ class GUIControl:
 
     def __load_action(self):
 
-        selected_website = self.__website_data[self.website_slot.index]
+        selected_website = self.__website_data[self.__website_slot.index]
         attribs = {"website_id": selected_website.website_id}
 
-        self.__action_data = self.__db_control.get_objects_of_class(DBmodels.Action, attribs)
+        self.__action_data = self.__db_control.get_objects_of_class(db_models.Action, attribs)
         action_addresses = [action.address for action in self.__action_data]
 
         action_model = self.__model_factory.create_model("ActionModel", {"address": action_addresses}, "address")
@@ -144,16 +190,17 @@ class GUIControl:
 
     def __load_parameters(self):
 
-        selected_action = self.__action_data[self.action_slot.index]
+        selected_action = self.__action_data[self.__action_slot.index]
         attribs = {"action_id": selected_action.action_id}
 
-        specification_data = self.__db_control.get_objects_of_class(DBmodels.Specification, attribs)
+        specification_data = self.__db_control.get_objects_of_class(db_models.Specification, attribs)
         parameter_id = [specification.parameter_id for specification in specification_data]
         attribs = {"parameter_id": parameter_id}
 
-        parameter_data = self.__db_control.get_objects_of_class(DBmodels.Parameter, attribs)
-        parameter_name = [parameter.name for parameter in parameter_data]
-        parameter_type = [parameter.type for parameter in parameter_data]
+        self.__parameter_data = self.__db_control.get_objects_of_class(db_models.Parameter, attribs)
+        self.__filled_parameter = {index: "" for index in range(len(self.__parameter_data))}
+        parameter_name = [parameter.name for parameter in self.__parameter_data]
+        parameter_type = [parameter.type for parameter in self.__parameter_data]
 
         parameter_dict = {
             "name": parameter_name,
@@ -162,6 +209,10 @@ class GUIControl:
 
         parameter_model = self.__model_factory.create_model("ParameterModel", parameter_dict, "name")
         self.__add_to_models({"parameterModel": parameter_model})
+
+    def __update_filled_parameters(self, index, msg):
+
+        self.__filled_parameter[index] = msg
 
     def __add_to_models(self, new_models):
 
