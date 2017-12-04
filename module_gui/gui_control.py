@@ -162,6 +162,7 @@ class GUIControl:
 
         command = {}
 
+        command["name"] = selected_data["current_website"].name
         command["protocol"] = selected_data["current_website"].protocol
         command["address"] = selected_data["current_website"].address
         command["action"] = selected_data["current_action"].address
