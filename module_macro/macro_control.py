@@ -1,7 +1,8 @@
-from bot_pool import BotPool
-from bot import Bot
-from parser_factory import ParserFactory
-from protocol_factory import ProtocolFactory
+from module_macro.bot_pool import BotPool
+from module_macro.bot import Bot
+from module_macro.parser_factory import ParserFactory
+from module_macro.protocol_factory import ProtocolFactory
+
 
 class MacroControl:
 
@@ -39,7 +40,7 @@ class MacroControl:
 
     def __get_parser_class(self, parser_name):
 
-        if parser_name in self.__parser_factory.get_protocols():
+        if parser_name in self.__parser_factory.get_parsers():
             return self.__parser_factory.create(parser_name)
         else:
             raise AttributeError("No such parser")

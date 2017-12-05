@@ -143,6 +143,7 @@ class GUIControl:
 
         selected_data = self.__gather_selected_data()
         command = self.__create_command(selected_data)
+
         self.__macro_control.use_command(command)
 
     def __gather_selected_data(self):
@@ -166,7 +167,7 @@ class GUIControl:
         command["protocol"] = selected_data["current_website"].protocol
         command["address"] = selected_data["current_website"].address
         command["action"] = selected_data["current_action"].address
-        command["parameters"] = list(selected_data["filled_parameters"])
+        command["parameters"] = dict(selected_data["filled_parameters"])
 
         return command
 
