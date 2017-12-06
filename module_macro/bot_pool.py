@@ -9,4 +9,4 @@ class BotPool:
     def add(self, bot):
 
         self.__bot_pool.append(bot)
-        bot.start()
+        bot.run()

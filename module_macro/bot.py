@@ -1,7 +1,7 @@
 import threading
+from module_db.db_control import DBControl
 
-
-class Bot(threading.Thread):
+class Bot:
 
     def __init__(
             self,
@@ -16,9 +16,11 @@ class Bot(threading.Thread):
         self.done = False
         self.address = address
         self.__protocol = protocol_class(url=self.address, bot=self)
-        self.__parser = parser_class()
+        self.__parser = parser_class(bot=self)
         self.__action = action
         self.__parameters = parameters
+
+        self.db_control = DBControl()
 
     def run(self):
 
@@ -26,12 +28,26 @@ class Bot(threading.Thread):
 
     def action(self, data):
 
+        print(data)
         if self.__action == "ticker":
             parsed = self.__parser.ticker(data, self.__parameters)
             if parsed is not None:
+
                 self.done = True
-                print(parsed)
                 self.__protocol.stop()
+                self.__save_ticker(parsed)
+
+        elif self.__action == "trollbox":
+            print("tutaj")
+            parsed = self.__parser.trollbox(data)
+            print(parsed)
+            self.done = True
+            self.__protocol.stop()
+
+
+    def __save_ticker(self, DTO):
+
+        self.db_control.map_object(DTO)
 
     def __str__(self):
 

@@ -18,3 +18,14 @@ class TestMacroControl(TestCase):
         }
 
         self.assertRaises(AttributeError, self.macro_control.use_command, command)
+
+
+        command = {
+            "name": "Poloniex",
+            "protocol": "WAMP",
+            "address": "wss://api.poloniex.com",
+            "action": "ticker",
+            "parameters": {"currency_pair": "USDT_BTC"}
+        }
+
+        self.macro_control.use_command(command)

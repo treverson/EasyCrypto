@@ -5,9 +5,16 @@
 
 - tests for SQLAlchemy if necessary
 - tests for Qt behaviour
+- tests for Twisted
 
+module_DB
 - handle password for DB
 
+module_gui
 - parameters input
-
 - role_count overflow in GUI
+- log window (needs decision on logging)
+
+module_macro
+- macro_control in its own thread
+

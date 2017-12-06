@@ -26,31 +26,35 @@ class WAMPProtocol:
             }]
         )
 
-        @self.__component.on_join
-        @inlineCallbacks
-        def join(session, details):
-            self.__session = session
-            print("Session {} joined: {}".format(details.session, details))
-            yield session.subscribe(self.__call_action, 'ticker')
-
     def do(self, command):
 
-        if command == "ticker":
-            run(self.__component)
+        self.__define_action(command)
+        run(self.__component)
 
     def stop(self):
 
         self.__session.leave()
 
+    def __define_action(self, action):
+
+        @self.__component.on_join
+        @inlineCallbacks
+        def join(session, details):
+            self.__session = session
+            print("Session {} joined: {}".format(details.session, details))
+            print(action)
+            yield session.subscribe(self.__call_action, action)
+
     def __call_action(self, *args):
 
-        print("sup")
+        print("cos")
         if not self.bot.done:
             self.bot.action(args)
 
     def __str__(self):
 
         return "WAMP"
+
 
 class ProtocolFactory:
 
