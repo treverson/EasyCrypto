@@ -6,7 +6,7 @@ from PyQt5.QtCore import QObject, QUrl
 
 from gui_models import ModelFactory
 from gui_qml_control import IndexChangedSlot, InputChangedSlot
-from module_macro import macro_control
+from module_comm import comm_control
 from module_db import db_control, db_models
 from utilities import logger, one_time
 
@@ -58,7 +58,7 @@ class GUIControl:
 
     def __create_macro_control(self):
 
-        self.__macro_control = macro_control.MacroControl()
+        self.__macro_control = comm_control.CommControl()
 
     def __create_app(self):
 

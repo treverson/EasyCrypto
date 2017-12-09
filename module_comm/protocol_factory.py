@@ -28,14 +28,14 @@ class WAMPProtocol:
 
     def do(self, command):
 
-        self.__define_action(command)
+        self.__define_action_to_subscribe(command)
         run(self.__component)
 
     def stop(self):
 
         self.__session.leave()
 
-    def __define_action(self, action):
+    def __define_action_to_subscribe(self, action):
 
         @self.__component.on_join
         @inlineCallbacks
@@ -47,7 +47,6 @@ class WAMPProtocol:
 
     def __call_action(self, *args):
 
-        print("cos")
         if not self.bot.done:
             self.bot.action(args)
 

@@ -17,4 +17,7 @@ module_gui
 
 module_macro
 - macro_control in its own thread
+- module as a plugin
+
+module_
 

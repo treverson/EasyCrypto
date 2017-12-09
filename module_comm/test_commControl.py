@@ -1,11 +1,11 @@
 from unittest import TestCase, mock
-from macro_control import MacroControl
+from comm_control import CommControl
 
-class TestMacroControl(TestCase):
+class TestCommControl(TestCase):
 
     def setUp(self):
 
-        self.macro_control = MacroControl()
+        self.macro_control = CommControl()
 
     def test_use_command(self):
 

@@ -1,32 +1,46 @@
-from autobahn.twisted.component import Component, run
-from autobahn.twisted.component import inlineCallbacks
-from twisted.internet.ssl import CertificateOptions
+from module_comm.bot_pool import BotPool
+from module_comm.bot import Bot
+from module_comm.parser_factory import ParserFactory
+from module_comm.protocol_factory import ProtocolFactory
 
-component = Component(
-    realm=u'realm1',
-    transports=[{
-        'endpoint': {
-            'type': 'tcp',
-            'host': u'api.poloniex.com',
-            'port': 443,
-            'tls': CertificateOptions()
-        },
-        'type': 'websocket',
-        'url': u'wss://api.poloniex.com',
-        'options': {
-            'open_handshake_timeout': 60.0
-        }
-    }]
-)
 
-def on_event(*args):
-    print('{0}: {1} A:{2} B:{3} {4}% V:{5} H:{8} L:{9}'.format(*args))
+class CommControl:
 
-@component.on_join
-@inlineCallbacks
-def join(session, details):
-    print("Session {} joined: {}".format(details.session, details))
-    yield session.subscribe(on_event, 'ticker')
+    def __init__(self):
 
-if __name__ == '__main__':
-    run(component)
+        self.__bot_pool = BotPool()
+        self.__protocol_factory = ProtocolFactory()
+        self.__parser_factory = ParserFactory()
+
+    def use_command(self, command):
+        exchange_bot = self.__create_exchange_bot(command)
+        self.__bot_pool.add(exchange_bot)
+
+    def __create_exchange_bot(self, specification):
+
+        protocol_class = self.__get_protocol_class(specification["protocol"])
+        parser_class = self.__get_parser_class(specification["name"])
+
+        exchange_bot = Bot(
+            protocol_class,
+            parser_class,
+            specification["address"],
+            specification["action"],
+            specification["parameters"]
+        )
+
+        return exchange_bot
+
+    def __get_protocol_class(self, protocol_name):
+
+        if protocol_name in self.__protocol_factory.get_protocols():
+            return self.__protocol_factory.create(protocol_name)
+        else:
+            raise AttributeError("No such protocol")
+
+    def __get_parser_class(self, parser_name):
+
+        if parser_name in self.__parser_factory.get_parsers():
+            return self.__parser_factory.create(parser_name)
+        else:
+            raise AttributeError("No such parser")

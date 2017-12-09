@@ -28,7 +28,6 @@ class Bot:
 
     def action(self, data):
 
-        print(data)
         if self.__action == "ticker":
             parsed = self.__parser.ticker(data, self.__parameters)
             if parsed is not None:
