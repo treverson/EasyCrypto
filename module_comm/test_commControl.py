@@ -21,11 +21,11 @@ class TestCommControl(TestCase):
 
 
         command = {
-            "name": "Poloniex",
-            "protocol": "WAMP",
-            "address": "wss://api.poloniex.com",
-            "action": "ticker",
-            "parameters": {"currency_pair": "USDT_BTC"}
+            "name": "Bittrex",
+            "protocol": "REST",
+            "address": "https://bittrex.com/api/v1.1/",
+            "action": "public/getcurrencies",
+            "parameters": {}
         }
 
         self.macro_control.use_command(command)

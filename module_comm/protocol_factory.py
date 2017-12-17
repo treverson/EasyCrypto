@@ -1,7 +1,13 @@
 from autobahn.twisted.component import Component, run
 from autobahn.twisted.component import inlineCallbacks
-from twisted.internet.ssl import CertificateOptions
 
+from crochet import run_in_reactor, wait_for
+
+from twisted.internet import reactor
+from twisted.internet.defer import Deferred
+from twisted.internet.protocol import Protocol
+from twisted.internet.ssl import CertificateOptions, ClientContextFactory
+from twisted.web.client import Agent
 
 class WAMPProtocol:
 
@@ -42,7 +48,6 @@ class WAMPProtocol:
         def join(session, details):
             self.__session = session
             print("Session {} joined: {}".format(details.session, details))
-            print(action)
             yield session.subscribe(self.__call_action, action)
 
     def __call_action(self, *args):
@@ -55,10 +60,71 @@ class WAMPProtocol:
         return "WAMP"
 
 
+class RESTProtocol:
+
+    def __init__(self, url, bot):
+
+        self.__url = url
+        self.bot = bot
+
+        class WebClientContextFactory(ClientContextFactory):
+            def getContext(self, hostname, port):
+                return ClientContextFactory.getContext(self)
+        context_factory = WebClientContextFactory()
+        self.__agent = Agent(reactor, context_factory)
+
+    def do(self, action):
+
+        self.__define_action(action)
+        reactor.run()
+
+    def stop(self):
+
+        print("wtf")
+        reactor.stop()
+
+    def __define_action(self, command):
+
+        url = self.__url+command
+        url = url.encode()
+        d = self.__agent.request(b'GET', url)
+        d.addCallbacks(self.__print_resource, self.__print_error)
+        d.addBoth(self.stop)
+
+    def __print_resource(self, response):
+
+        class ResourcePrinter(Protocol):
+            def __init__(self, finished, protocol):
+                self.finished = finished
+                self.protocol = protocol
+
+            def dataReceived(self, data):
+                print(data)
+
+            def connectionLost(self, reason):
+                self.finished.callback(self.protocol.stop())
+
+        finished = Deferred()
+
+        response.deliverBody(ResourcePrinter(finished, self))
+        return finished
+
+    def __print_error(self, failure):
+
+        print("Something has gone wrong.")
+        print(failure)
+        self.stop()
+
+    def __str__(self):
+
+        return "REST"
+
+
 class ProtocolFactory:
 
     __protocols = {
-        "WAMP":  WAMPProtocol
+        "WAMP": WAMPProtocol,
+        "REST": RESTProtocol
     }
 
     def get_protocols(self):

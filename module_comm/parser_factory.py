@@ -14,11 +14,8 @@ class PoloniexParser:
         if parameters["currency_pair"] in formatted_data:
 
             attribs = {"name": self.__str__()}
-            print(attribs)
             website_data = self.bot.db_control.get_objects_of_class(Website, attribs)
-            print(website_data)
             website_id = [website.website_id for website in website_data][0]
-            print(website_id)
 
             ticker_data = {
                 "website_id": website_id,
@@ -27,11 +24,10 @@ class PoloniexParser:
                 "lowest_ask": data[2],
                 "highest_bid": data[3]
             }
-            print(ticker_data)
+
             ticker = Ticker()
             load_args(ticker, ticker_data)
 
-            print(ticker.__dict__)
             return ticker
 
         return None
@@ -44,10 +40,22 @@ class PoloniexParser:
 
         return "Poloniex"
 
+
+class BittrexParser:
+
+    def __init__(self, bot):
+
+        self.bot = bot
+
+    def __str__(self):
+
+        return "Bittrex"
+
 class ParserFactory:
 
     __parsers = {
-        "Poloniex":  PoloniexParser
+        "Poloniex":  PoloniexParser,
+        "Bittrex":   BittrexParser
     }
 
     def get_parsers(self):

@@ -1,3 +1,6 @@
+import crochet
+crochet.no_setup()
+
 from module_comm.bot_pool import BotPool
 from module_comm.bot import Bot
 from module_comm.parser_factory import ParserFactory

@@ -1,4 +1,5 @@
 import threading
+
 from module_db.db_control import DBControl
 
 class Bot:
@@ -37,12 +38,16 @@ class Bot:
                 self.__save_ticker(parsed)
 
         elif self.__action == "trollbox":
-            print("tutaj")
+
             parsed = self.__parser.trollbox(data)
-            print(parsed)
             self.done = True
             self.__protocol.stop()
 
+        elif self.__action == "public/getcurrencies":
+
+            print(data.deliverBody())
+            self.__protocol.stop()
+            print("koniec")
 
     def __save_ticker(self, DTO):
 
