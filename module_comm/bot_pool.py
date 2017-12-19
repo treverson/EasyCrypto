@@ -1,5 +1,4 @@
 
-
 class BotPool:
 
     def __init__(self):

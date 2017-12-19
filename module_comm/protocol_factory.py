@@ -1,7 +1,6 @@
 from autobahn.twisted.component import Component, run
 from autobahn.twisted.component import inlineCallbacks
 
-from crochet import run_in_reactor, wait_for
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
@@ -76,12 +75,11 @@ class RESTProtocol:
     def do(self, action):
 
         self.__define_action(action)
-        reactor.run()
 
     def stop(self):
 
-        print("wtf")
-        reactor.stop()
+#       reactor.stop()
+        print("---------------------------------------")
 
     def __define_action(self, command):
 
@@ -105,6 +103,7 @@ class RESTProtocol:
                 self.finished.callback(self.protocol.stop())
 
         finished = Deferred()
+        finished.addErrback(self.__print_error)
 
         response.deliverBody(ResourcePrinter(finished, self))
         return finished

@@ -6,7 +6,6 @@ from PyQt5.QtCore import QObject, QUrl
 
 from gui_models import ModelFactory
 from gui_qml_control import IndexChangedSlot, InputChangedSlot
-from module_comm import comm_control
 from module_db import db_control, db_models
 from utilities import logger, one_time
 
@@ -22,8 +21,12 @@ class GUIControl:
     def setup(self):
 
         self.__create_db_control()
-        self.__create_macro_control()
         self.__create_app()
+
+        # install twisted reactor before importing twisted code
+        self.__install_twisted()
+        self.__create_comm_control()
+
         self.__refresh_event_website()
 
     def show(self):
@@ -56,9 +59,15 @@ class GUIControl:
 
         self.__db_control = db_control.DBControl()
 
-    def __create_macro_control(self):
+    def __create_comm_control(self):
 
-        self.__macro_control = comm_control.CommControl()
+        from module_comm import comm_control
+        self.__comm_control = comm_control.CommControl()
+
+    def __install_twisted(self):
+
+        import qt5reactor
+        qt5reactor.install()
 
     def __create_app(self):
 
@@ -95,7 +104,7 @@ class GUIControl:
 
             state_name = translator[state]
             button = self.__engine.rootObjects()[0].findChild(QObject, state_name)
-            button.setProperty("enabled", states[state] == 1)
+            button.setProperty("enabled", states[state])
 
     def __attach_events(self):
 
@@ -144,7 +153,7 @@ class GUIControl:
         selected_data = self.__gather_selected_data()
         command = self.__create_command(selected_data)
 
-        self.__macro_control.use_command(command)
+        self.__comm_control.use_command(command)
 
     def __gather_selected_data(self):
 

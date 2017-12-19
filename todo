@@ -14,6 +14,7 @@ module_gui
 - parameters input
 - role_count overflow in GUI
 - log window (needs decision on logging)
+- execute is not activated after first state update
 
 module_macro
 - macro_control in its own thread
