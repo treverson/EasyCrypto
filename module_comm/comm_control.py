@@ -1,6 +1,5 @@
 from twisted.internet import reactor
 
-from module_comm.bot_pool import BotPool
 from module_comm.bot import Bot
 from module_comm.parser_factory import ParserFactory
 from module_comm.protocol_factory import ProtocolFactory
@@ -9,7 +8,6 @@ class CommControl:
 
     def __init__(self):
 
-        self.__bot_pool = BotPool()
         self.__protocol_factory = ProtocolFactory()
         self.__parser_factory = ParserFactory()
         reactor.runReturn()
@@ -17,7 +15,7 @@ class CommControl:
     def use_command(self, command):
 
         exchange_bot = self.__create_exchange_bot(command)
-        self.__bot_pool.add(exchange_bot)
+        exchange_bot.run()
 
     def __create_exchange_bot(self, specification):
 

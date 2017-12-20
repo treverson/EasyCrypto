@@ -1,5 +1,3 @@
-import threading
-
 from module_db.db_control import DBControl
 
 class Bot:
@@ -12,7 +10,6 @@ class Bot:
             action,
             parameters):
 
-        threading.Thread.__init__(self)
 
         self.done = False
         self.address = address
