@@ -1,13 +1,28 @@
 from module_db.db_models import load_args, Website, Ticker
+from module_db.db_control import DBControl
 
 
 class PoloniexParser:
 
     def __init__(self, bot):
 
+        self.db_control = DBControl()
         self.bot = bot
 
-    def ticker(self, data, parameters):
+    def process(self, data, action, parameters):
+
+        if action == "ticker":
+            parsed = self.__ticker(data, parameters)
+
+            if parsed is not None:
+                self.bot.stop()
+                self.__save_ticker(parsed)
+
+        elif action == "trollbox": #not supported by Poloniex
+            parsed = self.__trollbox(data)
+            self.bot.stop()
+
+    def __ticker(self, data, parameters):
 
         formatted_data = '{0}: {1} A:{2} B:{3} {4}% V:{5} H:{8} L:{9}'.format(*data)
 
@@ -32,9 +47,13 @@ class PoloniexParser:
 
         return None
 
-    def trollbox(self, data):
+    def __trollbox(self, data):
 
         return data
+
+    def __save_ticker(self, DTO):
+
+        self.db_control.map_object(DTO)
 
     def __str__(self):
 
@@ -45,7 +64,16 @@ class BittrexParser:
 
     def __init__(self, bot):
 
+        self.db_control = DBControl()
         self.bot = bot
+
+    def process(self, data, action, parameters):
+
+        if action == "public/getcurrencies":
+
+            print(data.deliverBody())
+            self.__protocol.stop()
+            print("koniec")
 
     def __str__(self):
 

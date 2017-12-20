@@ -7,7 +7,7 @@ from PyQt5.QtCore import QObject, QUrl
 from gui_models import ModelFactory
 from gui_qml_control import IndexChangedSlot, InputChangedSlot
 from module_db import db_control, db_models
-from utilities import logger, one_time
+from utilities import logger
 
 
 class GUIControl:

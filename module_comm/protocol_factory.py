@@ -8,6 +8,7 @@ from twisted.internet.protocol import Protocol
 from twisted.internet.ssl import CertificateOptions, ClientContextFactory
 from twisted.web.client import Agent
 
+
 class WAMPProtocol:
 
     def __init__(self, url, bot):
@@ -78,7 +79,6 @@ class RESTProtocol:
 
     def stop(self):
 
-#       reactor.stop()
         print("---------------------------------------")
 
     def __define_action(self, command):

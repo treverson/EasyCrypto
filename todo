@@ -16,9 +16,8 @@ module_gui
 - log window (needs decision on logging)
 - execute is not activated after first state update
 
-module_macro
-- macro_control in its own thread
-- module as a plugin
-
-module_
+module_comm
+- fix all the warnings !!!!
+- if parsers grow might create an abstract class
+- reactor does not stop when gui stops
 

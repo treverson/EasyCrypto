@@ -10,12 +10,21 @@ class CommControl:
 
         self.__protocol_factory = ProtocolFactory()
         self.__parser_factory = ParserFactory()
-        reactor.runReturn()
+        self.__setup_reactor()
 
     def use_command(self, command):
 
         exchange_bot = self.__create_exchange_bot(command)
         exchange_bot.run()
+
+    def __setup_reactor(self):
+
+        # ought to be triggered when shutting down
+        def stop():
+            reactor.stop()
+
+        reactor.runReturn()
+        reactor.addSystemEventTrigger('before', 'shutdown', stop)
 
     def __create_exchange_bot(self, specification):
 
