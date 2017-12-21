@@ -191,22 +191,24 @@ class DBControl:
 
         if "Parameter" not in data:
             return
-        
-        parameter = db_models.Parameter()
-        db_models.load_args(parameter, data["Parameter"])
-        self.map_object(parameter)
 
-        specification = db_models.Specification()
+        for parameter_data in data["Parameter"]:
+            parameter = db_models.Parameter()
+            db_models.load_args(parameter, parameter_data)
+            self.map_object(parameter)
 
-        action_address = data["Specification"]["action_address"]
-        action_id = self.get_objects_of_class(db_models.Action, {"address": action_address})[0].action_id
+        for specification_data in data["Specification"]:
+            specification = db_models.Specification()
 
-        parameter_name = data["Specification"]["parameter_name"]
-        parameter_id = self.get_objects_of_class(db_models.Parameter, {"name": parameter_name})[0].parameter_id
+            action_address = specification_data["action_address"]
+            action_id = self.get_objects_of_class(db_models.Action, {"address": action_address})[0].action_id
 
-        specification.action_id = action_id
-        specification.parameter_id = parameter_id
-        self.map_object(specification)
+            parameter_name = specification_data["parameter_name"]
+            parameter_id = self.get_objects_of_class(db_models.Parameter, {"name": parameter_name})[0].parameter_id
+
+            specification.action_id = action_id
+            specification.parameter_id = parameter_id
+            self.map_object(specification)
 
     def __clear_all_tables(self):
 

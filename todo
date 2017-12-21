@@ -21,3 +21,7 @@ module_comm
 - if parsers grow might create an abstract class
 - reactor does not stop when gui stops
 
+new features:
+- periodic ticker requests
+- parser for macros
+- visualization
