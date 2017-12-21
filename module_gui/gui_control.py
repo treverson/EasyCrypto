@@ -184,8 +184,12 @@ class GUIControl:
 
         self.__website_data = self.__db_control.get_objects_of_class(db_models.Website)
         website_names = [website.name for website in self.__website_data]
+        website_protocols = [website.protocol for website in self.__website_data]
 
-        website_model = self.__model_factory.create_model("WebsiteModel", {"name": website_names}, "name")
+        website_proper_names = zip(website_names, website_protocols)
+        website_proper_names = list(x + " " + y for x, y in website_proper_names)
+
+        website_model = self.__model_factory.create_model("WebsiteModel", {"name": website_proper_names}, "name")
         self.__add_to_models({"websiteModel": website_model})
 
     def __load_action(self):
