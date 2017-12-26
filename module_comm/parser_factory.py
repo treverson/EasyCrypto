@@ -1,8 +1,10 @@
+import json
+
 from module_db.db_models import load_args, Website, Ticker
 from module_db.db_control import DBControl
 
 
-class PoloniexParser:
+class PoloniexWAMPParser:
 
     def __init__(self, bot):
 
@@ -15,12 +17,7 @@ class PoloniexParser:
             parsed = self.__ticker(data, parameters)
 
             if parsed is not None:
-                self.bot.stop()
                 self.__save_ticker(parsed)
-
-        elif action == "trollbox": #not supported by Poloniex
-            parsed = self.__trollbox(data)
-            self.bot.stop()
 
     def __ticker(self, data, parameters):
 
@@ -28,8 +25,8 @@ class PoloniexParser:
 
         if parameters["currency_pair"] in formatted_data:
 
-            attribs = {"name": self.__str__()}
-            website_data = self.bot.db_control.get_objects_of_class(Website, attribs)
+            attribs = {"name": get_parser_name(self.__str__())}
+            website_data = self.db_control.get_objects_of_rsclass(Website, attribs)
             website_id = [website.website_id for website in website_data][0]
 
             ticker_data = {
@@ -43,13 +40,10 @@ class PoloniexParser:
             ticker = Ticker()
             load_args(ticker, ticker_data)
 
+            self.__save_ticker(ticker)
             return ticker
 
         return None
-
-    def __trollbox(self, data):
-
-        return data
 
     def __save_ticker(self, DTO):
 
@@ -57,10 +51,62 @@ class PoloniexParser:
 
     def __str__(self):
 
-        return "Poloniex"
+        return "Poloniex WAMP"
 
 
-class BittrexParser:
+class PoloniexRESTParser:
+
+    def __init__(self, bot):
+
+        self.db_control = DBControl()
+        self.bot = bot
+
+    def process(self, data, action, parameters):
+
+        if action == "returnTicker":
+            parsed = self.__returnTicker(data, parameters)
+
+            if parsed is not None:
+                self.__save_ticker(parsed)
+
+    def __returnTicker(self, data, parameters):
+
+        data = data.decode("utf-8").replace("'", "\"")
+        data = json.loads(data)
+
+        if parameters["currency_pair"] in data:
+
+            data = data[parameters["currency_pair"]]
+            attribs = {"name": get_parser_name(self.__str__())}
+            website_data = self.db_control.get_objects_of_class(Website, attribs)
+            website_id = [website.website_id for website in website_data][0]
+
+            ticker_data = {
+                "website_id": website_id,
+                "currency_pair": parameters["currency_pair"],
+                "last_price": data["last"],
+                "lowest_ask": data["lowestAsk"],
+                "highest_bid": data["highestBid"]
+            }
+
+            ticker = Ticker()
+            load_args(ticker, ticker_data)
+
+            self.__save_ticker(ticker)
+            return ticker
+
+        return None
+
+    def __save_ticker(self, DTO):
+
+        self.db_control.map_object(DTO)
+
+    def __str__(self):
+
+        return "Poloniex REST"
+
+
+class BittrexRESTParser:
 
     def __init__(self, bot):
 
@@ -71,19 +117,19 @@ class BittrexParser:
 
         if action == "public/getcurrencies":
 
-            print(data.deliverBody())
-            self.__protocol.stop()
-            print("koniec")
+            print(data.decode("utf-8"))
 
     def __str__(self):
 
-        return "Bittrex"
+        return "Bittrex REST"
+
 
 class ParserFactory:
 
     __parsers = {
-        "Poloniex":  PoloniexParser,
-        "Bittrex":   BittrexParser
+        "Poloniex REST":  PoloniexRESTParser,
+        "Poloniex WAMP":  PoloniexWAMPParser,
+        "Bittrex REST":   BittrexRESTParser
     }
 
     def get_parsers(self):
@@ -93,3 +139,8 @@ class ParserFactory:
     def create(self, parser_name):
 
         return self.__parsers[parser_name]
+
+
+def get_parser_name(full_name):
+
+    return full_name.split(" ")[0]

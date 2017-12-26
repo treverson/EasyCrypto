@@ -92,20 +92,23 @@ class RESTProtocol:
     def __print_resource(self, response):
 
         class ResourcePrinter(Protocol):
-            def __init__(self, finished, protocol):
-                self.finished = finished
-                self.protocol = protocol
+            def __init__(self, finished_inner, bot):
+                self.finished = finished_inner
+                self.bot = bot
+                self.response = b""
 
             def dataReceived(self, data):
-                print(data)
+                self.response += data
 
             def connectionLost(self, reason):
-                self.finished.callback(self.protocol.stop())
+                print(reason)
+                self.bot.action(self.response)
+                self.finished.callback(self.bot.stop)
 
         finished = Deferred()
         finished.addErrback(self.__print_error)
 
-        response.deliverBody(ResourcePrinter(finished, self))
+        response.deliverBody(ResourcePrinter(finished, self.bot))
         return finished
 
     def __print_error(self, failure):

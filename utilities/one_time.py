@@ -1,4 +1,4 @@
-""" Couple of functions for one-time usage e.g. debugging
+""" Couple of functions for general usage
 """
 
 

@@ -29,7 +29,7 @@ class CommControl:
     def __create_exchange_bot(self, specification):
 
         protocol_class = self.__get_protocol_class(specification["protocol"])
-        parser_class = self.__get_parser_class(specification["name"])
+        parser_class = self.__get_parser_class(self.__get_parser_name(specification))
 
         exchange_bot = Bot(
             protocol_class,
@@ -54,3 +54,7 @@ class CommControl:
             return self.__parser_factory.create(parser_name)
         else:
             raise AttributeError("No such parser")
+
+    def __get_parser_name(self, specification):
+
+        return specification["name"] + " " + specification["protocol"]
