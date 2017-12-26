@@ -15,6 +15,7 @@ module_gui
 - role_count overflow in GUI
 - log window (needs decision on logging)
 - execute is not activated after first state update
+- clicking on parameter text does not change the selection
 
 module_comm
 - fix all the warnings !!!!
@@ -22,6 +23,5 @@ module_comm
 - reactor does not stop when gui stops
 
 new features:
-- periodic ticker requests
 - parser for macros
 - visualization

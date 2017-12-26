@@ -1,3 +1,6 @@
+from twisted.internet import reactor, task
+
+
 class Bot:
 
     def __init__(
@@ -20,13 +23,24 @@ class Bot:
         self.__protocol.do(self.__action)
 
     def action(self, data):
-
         self.__parser.process(data, self.__action, self.__parameters)
+
+        if self.__interval_defined():
+            interval = self.__get_interval()
+            task.deferLater(reactor, interval, self.__protocol.do, self.__action)
 
     def stop(self):
 
         self.done = True
         self.__protocol.stop()
+
+    def __interval_defined(self):
+
+        return "interval" in self.__parameters and len(self.__parameters["interval"]) > 0
+
+    def __get_interval(self):
+
+        return int(self.__parameters["interval"])
 
     def __str__(self):
 
