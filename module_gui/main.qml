@@ -169,6 +169,8 @@ Window {
                             MouseArea {
                                 id: actionMouseArea
                                 anchors.fill: parent
+
+
                                 onClicked: {
                                     parameterListView.currentIndex = index
                                 }
@@ -187,7 +189,6 @@ Window {
                                     parameterSlot.notifyInputChanged(parameterListView.currentIndex, text)
                                 }
                             }
-
                         }
                     }
                 }

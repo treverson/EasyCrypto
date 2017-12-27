@@ -1,0 +1,24 @@
+{
+  "Website": {
+    "name": "Poloniex",
+    "address": "wss://api.poloniex.com",
+    "protocol": "WAMP"
+  },
+  "Action": [
+    {
+      "address": "ticker"
+    }
+  ],
+  "Parameter": [
+    {
+      "name": "currency_pair",
+      "type": "String"
+    }
+  ],
+  "Specification": [
+    {
+      "action_address": "ticker",
+      "parameter_name": "currency_pair"
+    }
+  ]
+}

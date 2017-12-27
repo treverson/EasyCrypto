@@ -7,6 +7,7 @@ from PyQt5.QtCore import QObject, QUrl
 from gui_models import ModelFactory
 from gui_qml_control import IndexChangedSlot, InputChangedSlot
 from module_db import db_control, db_models
+from module_visual import visual_control
 from utilities import logger
 
 
@@ -17,10 +18,11 @@ class GUIControl:
         self.__models = {}
         self.__model_factory = ModelFactory()
         self.__create_logger()
+        self.__create_db_control()
+        self.__create_visual_control()
 
     def setup(self):
 
-        self.__create_db_control()
         self.__create_app()
 
         # install twisted reactor before importing twisted code
@@ -58,6 +60,10 @@ class GUIControl:
     def __create_db_control(self):
 
         self.__db_control = db_control.DBControl()
+
+    def __create_visual_control(self):
+
+        self.__visual_control = visual_control.VisualControl()
 
     def __create_comm_control(self):
 
@@ -153,7 +159,11 @@ class GUIControl:
         selected_data = self.__gather_selected_data()
         command = self.__create_command(selected_data)
 
-        self.__comm_control.use_command(command)
+        executor = self.__comm_control
+        if "Visualization" in command["name"]:
+            executor = self.__visual_control
+
+        executor.use_command(command)
 
     def __gather_selected_data(self):
 

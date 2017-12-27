@@ -22,7 +22,7 @@ module_comm
 - if parsers grow might create an abstract class
 - reactor does not stop when gui stops
 
-module_parser
+module_macro
 - needs framework
 
 new features:
