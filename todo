@@ -25,5 +25,15 @@ module_comm
 module_macro
 - needs framework
 
-new features:
-- visualization
+warnings:
+- PendingDeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+  import imp, sys, os
+  - > Probably, PyQt using some outdated version of winapi
+
+- ResourceWarning: unclosed <socket.socket fd=1704, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 49346)>
+  self.waker = self._wakerFactory(self)
+  -> Inner problem in urllib3
+
+- DeprecationWarning: <module_comm.protocol_factory.RESTProtocol.__init__.<locals>.WebClientContextFactory object at 0x00000000130BA4A8> was passed as the HTTPS policy for an Agent, but it does not provide IPolicyForHTTPS.  Since Twisted 14.0, you must pass a provider of IPolicyForHTTPS.
+  self.__agent = Agent(reactor, context_factory)
+  -> Using treq which solves the issue makes it impossible to verify certifiacte as it cannot be found on windows

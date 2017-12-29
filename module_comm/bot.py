@@ -23,6 +23,7 @@ class Bot:
         self.__protocol.do(self.__action)
 
     def action(self, data):
+
         self.__parser.process(data, self.__action, self.__parameters)
 
         if self.__interval_defined():

@@ -77,45 +77,38 @@ class RESTProtocol:
 
         self.__define_action(action)
 
-    def stop(self):
-
-        print("---------------------------------------")
-
     def __define_action(self, command):
 
         url = self.__url+command
         url = url.encode()
         d = self.__agent.request(b'GET', url)
-        d.addCallbacks(self.__print_resource, self.__print_error)
-        d.addBoth(self.stop)
+        d.addCallbacks(self.__collect_resource, self.__error)
 
-    def __print_resource(self, response):
+    def __collect_resource(self, response):
 
-        class ResourcePrinter(Protocol):
-            def __init__(self, finished_inner, bot):
+        class ResourceCollector(Protocol):
+            def __init__(self, finished_inner):
                 self.finished = finished_inner
-                self.bot = bot
                 self.response = b""
 
             def dataReceived(self, data):
                 self.response += data
 
             def connectionLost(self, reason):
-                print(reason)
-                self.bot.action(self.response)
-                self.finished.callback(self.bot.stop)
+                self.finished.callback(self.response)
 
         finished = Deferred()
-        finished.addErrback(self.__print_error)
+        finished.addCallbacks(self.__success, self.__error)
 
-        response.deliverBody(ResourcePrinter(finished, self.bot))
-        return finished
+        response.deliverBody(ResourceCollector(finished))
 
-    def __print_error(self, failure):
+    def __error(self, failure):
 
-        print("Something has gone wrong.")
         print(failure)
-        self.stop()
+
+    def __success(self, data):
+
+        self.bot.action(data)
 
     def __str__(self):
 
