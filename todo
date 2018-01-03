@@ -7,6 +7,10 @@
 - tests for Qt behaviour
 - tests for Twisted
 
+tests
+- private methods ??
+- mocking private objects ??
+
 module_DB
 - handle password for DB
 
